@@ -58,9 +58,12 @@
         resource_group: "{{ resource_group }}"
         name: "nic-{{ vm_name }}"
         virtual_network: "vnet-test"
-        subnet: "subnet-test"
-        public_ip_name: "pip-{{ vm_name }}"
+        subnet_name: "subnet-test"
         security_group: "nsg-{{ vm_name }}"
+        ip_configurations:
+          - name: "ipconfig1"
+            public_ip_address_name: "pip-{{ vm_name }}"
+            primary: true
         state: present
 
     - name: Create virtual machine
