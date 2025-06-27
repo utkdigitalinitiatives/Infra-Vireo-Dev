@@ -63,7 +63,8 @@ resource "azurerm_public_ip" "main" {
   name                = "pip-rocky-vm"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 # Create Network Interface
@@ -140,6 +141,7 @@ resource "azurerm_linux_virtual_machine" "main" {
 # Output the public IP address
 output "public_ip_address" {
   value = azurerm_public_ip.main.ip_address
+  description = "The public IP address of the VM"
 }
 
 # Output VM details for Ansible
@@ -151,5 +153,26 @@ output "vm_details" {
     private_ip         = azurerm_network_interface.main.private_ip_address
     admin_username     = azurerm_linux_virtual_machine.main.admin_username
     location           = azurerm_resource_group.main.location
+    fqdn               = azurerm_public_ip.main.fqdn
   }
+  description = "VM configuration details for Ansible"
+}
+
+# Output Ansible inventory format
+output "ansible_inventory" {
+  value = {
+    all = {
+      hosts = {
+        "${azurerm_linux_virtual_machine.main.name}" = {
+          ansible_host = azurerm_public_ip.main.ip_address
+          ansible_user = azurerm_linux_virtual_machine.main.admin_username
+          ansible_ssh_private_key_file = "~/.ssh/id_rsa"
+          private_ip = azurerm_network_interface.main.private_ip_address
+          resource_group = azurerm_resource_group.main.name
+          location = azurerm_resource_group.main.location
+        }
+      }
+    }
+  }
+  description = "Ansible inventory in JSON format"
 }
