@@ -1,4 +1,4 @@
-# Configure the Azure Provider
+\# Configure the Azure Provider
 terraform {
   required_providers {
     azurerm = {
@@ -10,7 +10,11 @@ terraform {
 
 # Configure the Microsoft Azure Provider
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 # Create a resource group
@@ -82,6 +86,13 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
+# Accept the marketplace agreement for Rocky Linux
+resource "azurerm_marketplace_agreement" "rocky" {
+  publisher = "resf"
+  offer     = "rockylinux-x86_64"
+  plan      = "9-lvm"
+}
+
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "main" {
   name                = "vm-rocky-linux"
@@ -114,6 +125,16 @@ resource "azurerm_linux_virtual_machine" "main" {
     sku       = "9-lvm"
     version   = "9.6.20250531"
   }
+
+  # Plan information required for marketplace images
+  plan {
+    name      = "9-lvm"
+    product   = "rockylinux-x86_64"
+    publisher = "resf"
+  }
+
+  # Ensure marketplace agreement is accepted first
+  depends_on = [azurerm_marketplace_agreement.rocky]
 }
 
 # Output the public IP address
